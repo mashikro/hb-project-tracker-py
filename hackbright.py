@@ -30,10 +30,16 @@ def get_student_by_github(github):
         """
 
     db_cursor = db.session.execute(QUERY, {'github': github})
-
+    
     row = db_cursor.fetchone()
+    # print(row)
 
-    print("Student: {} {}\nGitHub account: {}".format(row[0], row[1], row[2]))
+    if row is None: #if github doesnt exist fetchone() returns none so row is none
+        print('Try again')
+        # get_student_by_github(github)
+
+    else:
+        print("Student: {} {}\nGitHub account: {}".format(row[0], row[1], row[2]))
 
 
 def make_new_student(first_name, last_name, github):
@@ -106,6 +112,26 @@ def add_project(title, description, max_grade):
     db.session.commit()
     print("Added")
 
+
+def get_grades(github):
+    ''' See all the grades for a student'''
+
+    QUERY = '''SELECT grade, project_title 
+    FROM grades WHERE student_github = :github
+    '''
+
+    cursor = db.session.execute(QUERY, {'github': github})
+    grades = cursor.fetchall()
+
+    for project in grades:
+        print(f'Project title: {project[1]} and Grade: {project[0]}')
+
+def handle_parameter_error(args, tokens):
+
+    if len(args)+1 != len(tokens):
+        print('Number of arguements dont match!')
+        
+
 def handle_input():
     """Main loop.
 
@@ -120,10 +146,15 @@ def handle_input():
         tokens = input_string.split()
         command = tokens[0]
         args = tokens[1:]
+        
+        # if len(args) != len(tokens)-1:
+        #    raise TypeError(f'{} arguments required')
+        # else:
+        #     handle_parameter_error(args, tokens)
 
         if command == "student":
-            github = args[0]
-            get_student_by_github(github)
+                github = args[0]
+                get_student_by_github(github)
 
         elif command == "new_student":
             first_name, last_name, github = args  # unpack!
@@ -144,6 +175,10 @@ def handle_input():
         elif command == 'add_project':
             title, description, max_grade = args
             add_project(title, description, max_grade)
+
+        elif command == 'all_grades':
+            github = args[0]
+            get_grades(github)
 
         else:
             if command != "quit":
